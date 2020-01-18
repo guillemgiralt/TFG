@@ -6,34 +6,34 @@ import threading
 import time
 import logging
 
-def my_move(z):
-    logging.info("thread start")
-    z.move(1.0, 0.1)
-    logging.info("thread finish")
-    logging.info("position={}".format(z.position()))
-    return
-
 if __name__ == "__main__":
     #robothead = RobotHead()
     #robotbody = RobotBody(robothead)
     #robotbody.initialize()
 
     format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+    logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
     
-    z = RobotServo(0,0,100)
-    z.initialize(0.5)
+    right = RobotServo(0,0,100,logging)
+    right.initialize(0.0)
 
-    z.move(0.0)
-    t = threading.Thread(target=my_move, args=(z,)) 
-    logging.info("main start")
-    t.start()
-    logging.info("main started")
-    time.sleep(5.0)
-    logging.info("main stopping")
-    #z.stop()
-    logging.info("main stoped")
-    print(z.position())
+    left = RobotServo(1,100,0,logging)
+    left.initialize(0.0)
+
+    right.move(0.5)
+    left.move(0.5)
+    right.wait()
+    left.wait()
+    
+    right.move(1.0, 0.1, 20)
+    right.wait()
+    
+    left.move(1.0, 0.1, 10)
+    left.wait()
+
+    right.shutdown()
+    left.shutdown()
+    
     
     
 
