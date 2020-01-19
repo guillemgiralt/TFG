@@ -14,21 +14,30 @@ if __name__ == "__main__":
     format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
     
-    right = RobotServo(0,0,100,logging)
+    globalLock = threading.Lock()
+    
+    right = RobotServo(0,0,100, globalLock, logging)
     right.initialize(0.0)
 
-    left = RobotServo(1,100,0,logging)
+    left = RobotServo(1,100,0,globalLock, logging)
     left.initialize(0.0)
 
-    right.move(0.5)
-    left.move(0.5)
+    right.move(1.0)
+    left.move(0.0)
     right.wait()
     left.wait()
     
-    right.move(1.0, 0.1, 20)
-    right.wait()
+    right.move(0.0, 0.25)
+    left.move(1.0, 0.25)
     
-    left.move(1.0, 0.1, 10)
+    time.sleep(1.0)
+    right.stop()
+    left.stop()
+    
+    right.move(1.0, 0.25)
+    left.move(0.0, 0.25)
+    
+    right.wait()
     left.wait()
 
     right.shutdown()
