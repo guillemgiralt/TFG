@@ -2,11 +2,8 @@
 import time
 import threading
 
-from SunFounder_PCA9685 import Servo
-
-from robothead import RobotHead
-from robotbody import RobotBody
-from robotservo import RobotServo
+from robothead  import RobotHead
+from robotbody  import RobotBody
 
 class Robot:
     """
@@ -15,15 +12,20 @@ class Robot:
 
     def __init__ (self, name):
         """
-        Initialize and instantiate the servo motors for the body.
+        Create the robot.
+
+        Parameters
+        ----------
+        name : string
+            The robot nickname.
         """
         self._initialized = False
-        
-        self._name = name
-        
-        self._globalLock = threading.Lock()
-        
-        self._head = RobotHead()
+        self._name        = name
+        self._globalLock  = threading.Lock()
+
+        # Create the head and the body.
+        #
+        self._head = RobotHead(self._globalLock)
         self._body = RobotBody(self._globalLock)
 
         return
@@ -34,21 +36,49 @@ class Robot:
         """
         if not self._initialized:
             self._initialized = True
-            #self._head.initialize()
+            self._head.initialize()
             self._body.initialize ()
         return
     
     def name(self):
+        """
+        Get the robot nick name.
+
+        Returns
+        -------
+        string
+            The robot nick name.
+        """
         return self._name
     
     def head(self):
+        """
+        Get the robot head.
+
+        Returns
+        -------
+        object
+            The robot head.
+        """
         return self._head
     
     def body(self):
+        """
+        Get the robot body.
+
+        Returns
+        -------
+        object
+            The robot body.
+        """
         return self._body
     
     def shutdown(self):
+        """
+        Shutdown the robot.
+        """
         self._body.shutdown()
+        self._head.shutdown()
         return
 
 

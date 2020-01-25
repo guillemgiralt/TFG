@@ -43,21 +43,14 @@ class RobotServo(threading.Thread):
         self._initial    = 0.0
         return
 
-    def initialize(self, position):
+    def initialize(self):
         """
         Initialize the motor, move the motors to its initial state.
-
-        Parameters
-        ----------
-        position : float
-            The initial servo position.
-
         """
         self._globalLock.acquire()
         self._servo.setup()
-        self._servo.write(self._to_angle(position))
         self._globalLock.release()
-        self._position = position
+        self._position = -1.0
         self.start()
         return
     

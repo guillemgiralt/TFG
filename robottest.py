@@ -17,25 +17,25 @@ if __name__ == "__main__":
     globalLock = threading.Lock()
     
     right = RobotServo(0,0,100, globalLock)
-    right.initialize(0.0)
+    right.initialize()
 
     left = RobotServo(1,100,0,globalLock)
-    left.initialize(0.0)
+    left.initialize()
 
     neck = RobotServo(2, 110, 180, globalLock)
-    neck.initialize(0.0)
+    neck.initialize()
 
     neckBodyUD = RobotServo(3,120, 95, globalLock)
-    neckBodyUD.initialize(0.0)
+    neckBodyUD.initialize()
 
     neckBodyLR = RobotServo(4,0,180, globalLock)
-    neckBodyLR.initialize(0.0)
+    neckBodyLR.initialize()
 
     leftEye    = RobotServo(5, 65, 50, globalLock)
-    leftEye.initialize(0.0)
+    leftEye.initialize()
 
     rightEye   = RobotServo(6,110,140, globalLock)
-    rightEye.initialize(0.0)
+    rightEye.initialize()
 
     
     right.move(0.0)
@@ -45,6 +45,7 @@ if __name__ == "__main__":
     neckBodyLR.move(0.0)
     leftEye.move(1.0)
     rightEye.move(1.0)
+    
     right.wait()
     left.wait()
     neck.wait()
