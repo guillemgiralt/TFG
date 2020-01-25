@@ -1,48 +1,54 @@
 
+import time
+import threading
+
+from SunFounder_PCA9685 import Servo
+
 from robothead import RobotHead
 from robotbody import RobotBody
 from robotservo import RobotServo
-import threading
-import time
-import logging
 
-if __name__ == "__main__":
-    #robothead = RobotHead()
-    #robotbody = RobotBody(robothead)
-    #robotbody.initialize()
+class Robot:
+    """
+    This class implements the robot methods.
+    """
 
-    format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
-    
-    globalLock = threading.Lock()
-    
-    right = RobotServo(0,0,100, globalLock, logging)
-    right.initialize(0.0)
+    def __init__ (self, name):
+        """
+        Initialize and instantiate the servo motors for the body.
+        """
+        self._initialized = False
+        
+        self._name = name
+        
+        self._globalLock = threading.Lock()
+        
+        self._head = RobotHead()
+        self._body = RobotBody(self._globalLock)
 
-    left = RobotServo(1,100,0,globalLock, logging)
-    left.initialize(0.0)
+        return
 
-    right.move(1.0)
-    left.move(0.0)
-    right.wait()
-    left.wait()
+    def initialize(self):
+        """
+        Initialize the body, move the motors to its initial state.
+        """
+        if not self._initialized:
+            self._initialized = True
+            #self._head.initialize()
+            self._body.initialize ()
+        return
     
-    right.move(0.0, 0.25)
-    left.move(1.0, 0.25)
+    def name(self):
+        return self._name
     
-    time.sleep(1.0)
-    right.stop()
-    left.stop()
+    def head(self):
+        return self._head
     
-    right.move(1.0, 0.25)
-    left.move(0.0, 0.25)
+    def body(self):
+        return self._body
     
-    right.wait()
-    left.wait()
+    def shutdown(self):
+        self._body.shutdown()
+        return
 
-    right.shutdown()
-    left.shutdown()
-    
-    
-    
 
