@@ -24,38 +24,39 @@ class RobotBody:
         Initialize the body, move the motors to its initial state.
         """
         if not self._initialized:
-            self._initialized = True
-            
             self._neck.initialize ()
-            self._neck.move (0.0)
             self._leftArm.initialize ()
-            self._leftArm.move (0.0)
             self._rightArm.initialize()
+            
+            self._neck.move (0.0)
+            self._leftArm.move (0.0)
             self._rightArm.move (0)
+            
             self._neck.wait()
             self._leftArm.wait()
             self._rightArm.wait()
+            
+            self._initialized = True
         return
     
     def left_arm_move(self, position):
         self._leftArm.move (position, 0.75,30)
-        self._leftArm.wait()
         return
     
     def right_arm_move(self, position):
         self._rightArm.move (position, 0.75,30)
-        self._rightArm.wait()
         return
 
     def neck_move(self, position):
         self._neck.move (position, 0.75,30)
-        self._neck.wait()
         return
     
     def shutdown(self):
-        self._neck.shutdown()
-        self._leftArm.shutdown()
-        self._rightArm.shutdown()
+        if self._initialized:
+            self._neck.shutdown()
+            self._leftArm.shutdown()
+            self._rightArm.shutdown()
+            self._initialized = False
         return
 
 

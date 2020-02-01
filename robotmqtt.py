@@ -2,21 +2,19 @@
 import threading
 import time
 import logging
-import json
 import paho.mqtt.client as mqtt
 
 from robot import Robot
 
 
-def convert_position (jpos):
+def convert_position (position):
     """
-    Convert a JSON position into its floating point coordinate in the range [0.0, 1.0]
+    Convert a string position into its floating point coordinate in the range [0.0, 1.0]
     
     Parameters
     ----------
-        position : float or string.
-            The JSON position. If the valure received is an string it will be translated according to the 
-            following rules:
+        position : string.
+            The new position as strinf. The following string values will be honnored as well:
                - "left"  : will be translated to 0.0
                - "right" : will be translated to 1.0
                - "down"  : will be translated to 0.0
@@ -25,27 +23,26 @@ def convert_position (jpos):
     Returns
     -------
         float
-            The floating point coordinate in the range [0.0, 1.0].
+            The floating point coordinate in the range [0.0, 1.0] or -1.0 if the string is not valid or the position is out of range.
     """
-    if ((type(jpos) is unicode) or (type(jpos) is str)):
-        if (jpos == "up"):
-            return 1.0
-        elif (jpos == "down"):
-            return 0.0
-        elif (jpos == "left"):
-            return 0.0
-        elif (jpos == "right"):
-            return 1.0
-        else:
-            raise ValueError("unknown positon: {}".format(jpos))
-            
-    elif ((type(jpos) is float) or (type(jpos) is int)):
-        if ((jpos >= 0.0) and (jpos <= 1.0)):
-            return (float)(jpos)
-        else:
-            raise ValueError("positon out of range: {}".format(jpos))
+    if (position == "up"):
+        p = 1.0
+    elif (position == "down"):
+        p = 0.0
+    elif (position == "left"):
+        p = 1.0
+    elif (position == "right"):
+        p = 0.0
     else:
-        raise TypeError("invalid type: {}".format(type(jpos)))
+        try:
+            p = (float)(position)
+            if ((p < 0.0) or (p > 1.0)):
+                logging.error ("positon out of range: {}".format(position))
+                p = -1.0
+        except ValueError:
+            logging.error ("invalid float: {}".format(position))
+            p = -1.0
+    return p
     
 
 # The callback for when a PUBLISH message is received from the server.
@@ -54,70 +51,131 @@ def on_message(client, robot, msg):
     
     logging.debug("topic={} payload={}".format(msg.topic ,msg.payload))
             
-    try:
-        if (msg.topic.startswith("robot/body/")):
-            #----------------------------------
-            # operate with the body.
-            #----------------------------------
-
-            # process the parameters.
-            #
-            params = json.loads(msg.payload)
-            logging.debug("params={}".format(params))
-            
-            position = convert_position(params["position"])
-
-            # get the body part.
-            #
-            part = msg.topic.replace("robot/body/", "")
+    if (msg.topic.startswith("robot/body/")):
+        #----------------------------------
+        # operate with the body.
+        #----------------------------------
+        tokens = msg.topic.split('/')
+        if (len(tokens) == 4):
+            part   = tokens[2]
+            action = tokens[3]
             if (part == "right_arm"):
-                robot.body().right_arm_move(position)
+                print(3)
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('right arm move: "{}"'.format(position))
+                        robot.body().right_arm_move(position)
+                    else:
+                        logging.error('invalid right arm position: "{}"'.format(position))
+                else:
+                    logging.error('invalid right arm action: "{}"'.format(action))
             elif (part == "left_arm"):
-                robot.body().left_arm_move(position)
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('left arm move: "{}"'.format(position))
+                        robot.body().left_arm_move(position)
+                    else:
+                        logging.error('invalid left arm position: "{}"'.format(position))
+                else:
+                    logging.error('invalid left arm action: "{}"'.format(action))
             elif (part == "neck"):
-                robot.body().neck_move(position)
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('left neck move: "{}"'.format(position))
+                        robot.body().neck_move(position)
+                    else:
+                        logging.error('invalid neck position: "{}"'.format(position))
+                else:
+                    logging.error('invalid neck action: "{}"'.format(action))
             else:
-                raise SyntaxError('invalid part: "{}"'.format(part))
-
-        elif (msg.topic.startswith("robot/head/")):
-            #----------------------------------
-            # operate with the head.
-            #----------------------------------
-
-            # process the parameters.
-            #
-            params = json.loads(msg.payload)
-            logging.debug("params={}".format(params))
+                logging.error('invalid body part: "{}"'.format(part))
+        else:
+            logging.error('invalid body command: "{}"'.format(msg.topic))
             
-            position = convert_position(params["position"])
 
-            # get the head part.
-            #
-            part = msg.topic.replace("robot/head/", "")
-            if (part == "left_eye"):
-                robot.head().left_eye_move(position)
-            elif (part == "right_eye"):
-                robot.head().right_eye_move(position)
+    elif (msg.topic.startswith("robot/head/")):
+        #----------------------------------
+        # operate with the head.
+        #----------------------------------
+        tokens = msg.topic.split('/')
+        if (len(tokens) == 4):
+            part   = tokens[2]
+            action = tokens[3]
+            if (part == "right_eye"):
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('right eye move: "{}"'.format(position))
+                        robot.head().right_eye_move(position)
+                    else:
+                        logging.error('invalid right eye position: "{}"'.format(position))
+                else:
+                    logging.error('invalid right arm action: "{}"'.format(action))
+                
+            elif (part == "left_eye"):
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('left eye move: "{}"'.format(position))
+                        robot.head().left_eye_move(position)
+                    else:
+                        logging.error('invalid left eye position: "{}"'.format(position))
+                else:
+                    logging.error('invalid left arm action: "{}"'.format(action))
+                
+            elif (part == "neck_UD"):
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('neck UD move: "{}"'.format(position))
+                        robot.head().neck_UD_move(position)
+                    else:
+                        logging.error('invalid neck UD position: "{}"'.format(position))
+                else:
+                    logging.error('invalid neck UD action: "{}"'.format(action))
+                    
+            elif (part == "neck_LR"):
+                if (action == "move"):
+                    position = convert_position(msg.payload)
+                    if (position >= 0.0):
+                        logging.debug('neck LR move: "{}"'.format(position))
+                        robot.head().neck_LR_move(position)
+                    else:
+                        logging.error('invalid neck LR position: "{}"'.format(position))
+                else:
+                    logging.error('invalid neck LR action: "{}"'.format(action))
             else:
-                raise SyntaxError('invalid part: "{}"'.format(part))
+                logging.error('invalid head part: "{}"'.format(part))
+        else:
+            logging.error('invalid head command: "{}"'.format(msg.topic))
 
-        elif (msg.topic == "robot/shutdown"):
-            #----------------------------------
-            # shutdown the robot and terminate.
-            #----------------------------------
 
-            robot.shutdown ()
-            client.disconnect()
-            
-    except ValueError as e:
-        msg = 'value error: "{}"'.format(e)
-        logging.debug(msg)
-    except TypeError as e:
-        msg = '"type error: {}"'.format(e)
-        logging.debug(msg)
-    except SyntaxError as e:
-        msg = '"syntax error: {}"'.format(e)
-        logging.debug(msg)
+    elif (msg.topic == "robot/initialize"):
+        #----------------------------------
+        # initialze the robot and terminate.
+        #----------------------------------
+        logging.debug('initialize')
+        robot.initialize ()
+
+    elif (msg.topic == "robot/shutdown"):
+        #----------------------------------
+        # shutdown the robot and terminate.
+        #----------------------------------
+        logging.debug('shutdown')
+        robot.shutdown ()
+
+    elif (msg.topic == "robot/quit"):
+        #----------------------------------
+        # quit.
+        #----------------------------------
+        robot.shutdown ()
+        client.disconnect()
+
+    else:
+        logging.error('invalid command: "{}"'.format(msg.topic))
 
 if __name__ == "__main__":
     

@@ -77,8 +77,10 @@ class Robot:
         """
         Shutdown the robot.
         """
-        self._body.shutdown()
-        self._head.shutdown()
+        if self._initialized:
+            self._body.shutdown()
+            self._head.shutdown()
+            self._initialized = False
         return
 
 
