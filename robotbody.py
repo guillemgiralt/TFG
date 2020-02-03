@@ -28,9 +28,9 @@ class RobotBody:
             self._leftArm.initialize ()
             self._rightArm.initialize()
             
-            self._neck.move (0.0)
-            self._leftArm.move (0.0)
-            self._rightArm.move (0)
+            self._neck.move     (0.0, 1.0, 10)
+            self._leftArm.move  (0.0, 1.0, 10)
+            self._rightArm.move (0, 1.0 , 10)
             
             self._neck.wait()
             self._leftArm.wait()
@@ -40,15 +40,15 @@ class RobotBody:
         return
     
     def left_arm_move(self, position):
-        self._leftArm.move (position, 0.75,30)
+        self._leftArm.move (position, 1.0, 5)
         return
     
     def right_arm_move(self, position):
-        self._rightArm.move (position, 0.75,30)
+        self._rightArm.move (position, 1.0, 5)
         return
 
     def neck_move(self, position):
-        self._neck.move (position, 0.75,30)
+        self._neck.move (position, 1.0, 5)
         return
     
     def shutdown(self):

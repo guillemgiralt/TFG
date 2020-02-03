@@ -3,9 +3,9 @@ import threading
 import time
 import logging
 import paho.mqtt.client as mqtt
+import argparse
 
 from robot import Robot
-
 
 def convert_position (position):
     """
@@ -60,7 +60,6 @@ def on_message(client, robot, msg):
             part   = tokens[2]
             action = tokens[3]
             if (part == "right_arm"):
-                print(3)
                 if (action == "move"):
                     position = convert_position(msg.payload)
                     if (position >= 0.0):
@@ -179,8 +178,15 @@ def on_message(client, robot, msg):
 
 if __name__ == "__main__":
     
+    parser = argparse.ArgumentParser(description='Robot MQTT Interface.')
+    parser.add_argument('--debug', action="store_false", dest="debug", default=False, help="")
+    args = parser.parse_args()
+
     format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
+    if args.debug:
+        logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
+    else:
+        logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
     
     # create the robot.
     #
