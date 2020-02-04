@@ -4,6 +4,7 @@ import time
 import logging
 import paho.mqtt.client as mqtt
 import argparse
+import sys
 
 from robot import Robot
 
@@ -179,7 +180,7 @@ def on_message(client, robot, msg):
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Robot MQTT Interface.')
-    parser.add_argument('--debug', action="store_false", dest="debug", default=False, help="")
+    parser.add_argument('-d', '--debug', action="store_true", dest="debug", default=False, help="enable debug mode")
     args = parser.parse_args()
 
     format = "%(asctime)s: %(message)s"

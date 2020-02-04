@@ -113,13 +113,21 @@ class RobotServo(threading.Thread):
         while self._operate:
             self._cvmove.wait()
 
-        # set the target position and wakeup the servo thread.
-        #
-        self._target  = position
-        self._speed   = speed
-        self._steps   = steps
-        self._operate = True
-        self._cvmove.notify()
+        if speed == 0.0:
+            # direct move.
+            #
+            self._globalLock.acquire()
+            self._servo.write(self._to_angle(position))
+            self._globalLock.release()
+            self._position = position
+        else:
+            # set the target position and wakeup the servo thread.
+            #
+            self._target  = position
+            self._speed   = speed
+            self._steps   = steps
+            self._operate = True
+            self._cvmove.notify()
         
         self._cvmove.release()
         logging.debug ("move({}): done.".format(self._servoId))
@@ -201,42 +209,35 @@ class RobotServo(threading.Thread):
                 # perform the movement.
                 #
                 logging.debug ("run({}): target={}, speed={}, steps={})".format(self._servoId, self._target, self._speed ,self._steps))
-                if (self._speed == 0.0):
-                    # direct move.
-                    #
+                
+                # compute the increment for each step and the delay to use.
+                #
+                increment = (self._target - self._position) / self._steps
+                delay     = (abs(self._target - self._position) / self._speed) / self._steps
+
+                # start moving...
+                #
+                self._cvmove.acquire()
+                current = self._position + increment
+                self._stop = False
+                while ((not self._stop) and (self._steps > 0)):
+                    logging.debug ("run({}): current={})".format(self._servoId, current))
                     self._globalLock.acquire()
-                    self._servo.write(self._to_angle(self._target))
+                    self._servo.write(self._to_angle(current))
                     self._globalLock.release()
-                    self._position = self._target
+                    current = current + increment
+                    self._steps = self._steps - 1
+                    self._cvmove.wait(delay)
+
+                # movement done, store the position.
+                #
+                if self._stop:
+                    logging.debug ("run({}): stopped at current={})".format(self._servoId, current))
+                    self._position = current
                 else:
-                    # compute the increment for each step and the delay to use.
-                    #
-                    increment = (self._target - self._position) / self._steps
-                    delay     = (abs(self._target - self._position) / self._speed) / self._steps
-
-                    # start moving...
-                    #
-                    self._cvmove.acquire()
-                    current = self._position + increment
-                    self._stop = False
-                    while ((not self._stop) and (self._steps > 0)):
-                        logging.debug ("run({}): current={})".format(self._servoId, current))
-                        self._globalLock.acquire()
-                        self._servo.write(self._to_angle(current))
-                        self._globalLock.release()
-                        current = current + increment
-                        self._steps = self._steps - 1
-                        self._cvmove.wait(delay)
-
-                    # movement done, store the position.
-                    #
-                    if self._stop:
-                        logging.debug ("run({}): stopped at current={})".format(self._servoId, current))
-                        self._position = current
-                    else:
-                        logging.debug ("run({}): completed at current={})".format(self._servoId, self._target))
-                        self._position = self._target
-                    self._cvmove.release()
+                    logging.debug ("run({}): completed at current={})".format(self._servoId, self._target))
+                    self._position = self._target
+                self._cvmove.release()
                         
                 logging.debug ("run({}): done.".format(self._servoId))
             

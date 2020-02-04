@@ -6,18 +6,21 @@ import paho.mqtt.publish as publish
 import sys
 import logging
 import time
+import argparse
 
 class PS4Controller(object):
-    """Class representing the PS4 controller. Pretty straightforward functionality."""
+    """Class representing the Robot PS4 controller."""
 
-    controller = None
-    axis_data = None
-    button_data = None
-    hat_data = None
+    controller      = None
+    axis_data       = None
+    button_data     = None
+    hat_data        = None
     CROSS_BUTTON    = 0
     CIRCLE_BUTTON   = 1
     TRIANGLE_BUTTON = 2
     SQUARE_BUTTON   = 3
+    L1_BUTTON       = 4
+    R1_BUTTON       = 5
     L2_BUTTON       = 6
     R2_BUTTON       = 7
     SHARE_BUTTON    = 8
@@ -57,6 +60,15 @@ class PS4Controller(object):
         right_arm_p = -1.0
         neckLR      = False
         neckLR_p    = -1.0
+        left_eye    = False
+        left_eye_p  = -1.0
+        right_eye   = False
+        right_eye_p = -1.0
+        neck_Body_UD = False
+        neck_Body_UD_p = -1
+        neck_UD = False
+        neck_UD_p = -1
+        
         while not quit:
             for event in pygame.event.get():
                 if event.type == pygame.JOYAXISMOTION:
@@ -83,20 +95,60 @@ class PS4Controller(object):
                             # moving the right arm up-down.
                             #
                             position = 1.0 - self.value2pos(event.value)
-                            logging.debug("right_arm: {}{}".format(position, right_arm_p))
+                            logging.debug("right_arm: {} {}".format(position, right_arm_p))
                             if position != right_arm_p:
                                 publish.single ("robot/body/right_arm/move", payload=str(position) , hostname='localhost')
+                                
+                        elif left_eye:
+                            # moving the left arm up-down.
+                            #
+                            position = 1.0 - self.value2pos(event.value)
+                            logging.debug("left_eye: {} {}".format(position, left_eye_p))
+                            if position != left_eye_p:
+                                publish.single ("robot/head/left_eye/move", payload=str(position) , hostname='localhost')
+                                
+                        elif right_eye:
+                            # moving the left arm up-down.
+                            #
+                            position = 1.0 - self.value2pos(event.value)
+                            logging.debug("right_eye: {} {}".format(position, right_eye_p))
+                            if position != right_eye_p:
+                                publish.single ("robot/head/right_eye/move", payload=str(position) , hostname='localhost')
+                        elif neck_UD:
+                            # moving the left arm up-down.
+                            #
+                            position = 1.0 - self.value2pos(event.value)
+                            logging.debug("neck_UD: {} {}".format(position, neck_UD_p))
+                            if position != neck_UD_p:
+                                publish.single ("robot/head/neck_UD/move", payload=str(position) , hostname='localhost')
+                        elif neck_Body_UD:
+                            # moving the left arm up-down.
+                            #
+                            position = 1.0 - self.value2pos(event.value)
+                            logging.debug("neck_UD: {} {}".format(position, neck_Body_UD_p))
+                            if position != neck_Body_UD_p:
+                                publish.single ("robot/body/neck/move", payload=str(position) , hostname='localhost')
+                                
 
                 elif event.type == pygame.JOYBUTTONDOWN:
-                    print "pressed down the {} button".format(event.button)
+                    logging.debug("down {} button".format(event.button))
                     if event.button == self.L2_BUTTON:
                         left_arm = True
                     elif event.button == self.R2_BUTTON:
                         right_arm = True
                     elif event.button == self.CIRCLE_BUTTON:
                         neckLR = True
-                    
+                    elif event.button == self.R1_BUTTON:
+                        right_eye = True
+                    elif event.button == self.L1_BUTTON:
+                        left_eye = True
+                    elif event.button == self.TRIANGLE_BUTTON:
+                        neck_Body_UD = True
+                    elif event.button == self.SQUARE_BUTTON:
+                        neck_UD = True
+                        
                 elif event.type == pygame.JOYBUTTONUP:
+                    logging.debug("up {} button".format(event.button))
                     if event.button == self.CROSS_BUTTON:
                         publish.single ("robot/quit", payload="" , hostname='localhost', qos=2)
                         quit = True
@@ -108,10 +160,18 @@ class PS4Controller(object):
                         right_arm = False
                     elif event.button == self.CIRCLE_BUTTON:
                         neckLR = False
+                    elif event.button == self.TRIANGLE_BUTTON:
+                        neck_Body_UD = False
+                    elif event.button == self.SQUARE_BUTTON:
+                        neck_UD = False
+                    elif event.button == self.R1_BUTTON:
+                        right_eye = False
+                    elif event.button == self.L1_BUTTON:
+                        left_eye = False
                         
                 elif event.type == pygame.JOYHATMOTION:
-                    print "pressed hat {} button".format(event.hat)
                     if event.hat == 0:
+                        logging.debug("HAT button {}".format(event.value))
                         if event.value == (1, 0):
                             print "right"
                         if event.value == (-1, 0):
@@ -124,8 +184,16 @@ class PS4Controller(object):
 
 if __name__ == "__main__":
     
+    parser = argparse.ArgumentParser(description='Robot PS4 Interface.')
+    parser.add_argument('-d', '--debug', action="store_true", dest="debug", default=False, help="enable debug mode")
+    args = parser.parse_args()
+
     format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
+    if args.debug:
+        logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
+    else:
+        logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+    
 
     ps4 = PS4Controller()
     ps4.init()

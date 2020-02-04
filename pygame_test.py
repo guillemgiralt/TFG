@@ -67,12 +67,10 @@ class PS4Controller(object):
             for event in pygame.event.get():
                 if event.type == pygame.JOYAXISMOTION:
                     if event.axis == 0:
-                        if neckLR:
-                            # moving the neck left-right.
-                            #
-                            position = self.value2pos(event.value)
-                            logging.debug("neckLR: {}".format(position))
-                            publish.single ("robot/head/neck_LR/move", payload=str(position) , hostname='localhost')
+                        if event.value > 0:
+                            print "axis right"
+                        if event.value < 0:
+                            print "axis left"
                             
                     if event.axis == 1:
                         if event.value > 0:
@@ -82,39 +80,25 @@ class PS4Controller(object):
 
                 elif event.type == pygame.JOYBUTTONDOWN:
                     print "pressed down the {} button".format(event.button)
-                    if event.button == self.L2_BUTTON:
-                        left_arm = True
-                    elif event.button == self.CIRCLE_BUTTON:
-                        neckLR = True
                     
                 elif event.type == pygame.JOYBUTTONUP:
                     print "pressed up the {} button".format(event.button)
-                    if event.button == self.CROSS_BUTTON:
-                        publish.single ("robot/quit", payload="" , hostname='localhost')
-                        quit = True
-                    elif event.button == self.L2_BUTTON:
-                        left_arm = False
-                    elif event.button == self.CIRCLE_BUTTON:
-                        neckLR = False
                         
                 elif event.type == pygame.JOYHATMOTION:
                     print "pressed hat {} button".format(event.hat)
                     if event.hat == 0:
                         if event.value == (1, 0):
-                            print "right"
+                            print "HAT right"
                         if event.value == (-1, 0):
-                            print "left"
+                            print "HAT left"
                         if event.value == (0, 1):
-                            print "up"
+                            print "HAT up"
                         if event.value == (0, -1):
-                            print "down"
+                            print "HAT down"
 
 
 if __name__ == "__main__":
     
-    format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.DEBUG, datefmt="%H:%M:%S")
-
     ps4 = PS4Controller()
     ps4.init()
     ps4.listen()

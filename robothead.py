@@ -15,7 +15,7 @@ class RobotHead:
         """
         self._initialized = False
         self._globalLock  = globalLock
-        self._leftEye     = RobotServo(5, 65, 50, globalLock)
+        self._leftEye     = RobotServo(5, 75, 50, globalLock)
         self._rightEye    = RobotServo(6,110,140, globalLock)
         self._neckUD      = RobotServo(3,90,130, globalLock)
         self._neckLR      = RobotServo(4,0,180, globalLock)
@@ -32,8 +32,8 @@ class RobotHead:
             self._neckUD.initialize()
             self._neckLR.initialize()
             
-            self._leftEye.move (1.0)
-            self._rightEye.move (1.0)
+            self._leftEye.move (0.0)
+            self._rightEye.move (0.0)
             self._neckUD.move (0.0, 0.75, 30)
             self._neckLR.move (0.5, 0.5 , 30)
             
@@ -45,30 +45,30 @@ class RobotHead:
             self._initialized = True
         return
     
-    def left_eye_move(self, position):
-        self._leftEye.move(position, 1.0, 100)
+    def left_eye_move(self, position, speed=0.0, steps=10):
+        self._leftEye.move(position, speed, steps)
         return
     
 
-    def right_eye_move(self, position):
-        self._rightEye.move(position, 1.0, 100)
+    def right_eye_move(self, position, speed=0.0, steps=10):
+        self._rightEye.move(position, speed, steps)
         return
     
-    def neck_UD_move(self, position):
-        self._neckUD.move(position, 1.0, 30)
+    def neck_UD_move(self, position, speed=0.0, steps=10):
+        self._neckUD.move(position, speed, steps)
         return
 
-    def neck_LR_move(self,  position):
-        self._neckLR.move(position, 1.0, 5)
+    def neck_LR_move(self,  position, speed=0.0, steps=10):
+        self._neckLR.move(position, speed, steps)
         return
     
     def shutdown(self):
         if self._initialized:
             
-            self._leftEye.move (0.5)
-            self._rightEye.move (0.5)
-            self._neckUD.move (0.5)
-            self._neckLR.move (0.5)
+            self._leftEye.move (1.0)
+            self._rightEye.move (1.0)
+            self._neckUD.move (0.0, 0.75, 30)
+            self._neckLR.move (0.5, 0.5 , 30)
             
             self._leftEye.wait()
             self._rightEye.wait()

@@ -30,7 +30,7 @@ class RobotBody:
             
             self._neck.move     (0.0, 1.0, 10)
             self._leftArm.move  (0.0, 1.0, 10)
-            self._rightArm.move (0, 1.0 , 10)
+            self._rightArm.move (0.0, 1.0, 10)
             
             self._neck.wait()
             self._leftArm.wait()
@@ -39,23 +39,33 @@ class RobotBody:
             self._initialized = True
         return
     
-    def left_arm_move(self, position):
-        self._leftArm.move (position, 1.0, 5)
+    def left_arm_move(self, position, speed=0.0, steps=10):
+        self._leftArm.move (position, speed, steps)
         return
     
-    def right_arm_move(self, position):
-        self._rightArm.move (position, 1.0, 5)
+    def right_arm_move(self, position, speed=0.0, steps=10):
+        self._rightArm.move (position, speed, steps)
         return
 
-    def neck_move(self, position):
-        self._neck.move (position, 1.0, 5)
+    def neck_move(self, position, speed=0.0, steps=10):
+        self._neck.move (position, speed, steps)
         return
     
     def shutdown(self):
         if self._initialized:
+            
+            self._neck.move     (0.0, 1.0, 10)
+            self._leftArm.move  (0.0, 1.0, 10)
+            self._rightArm.move (0.0, 1.0, 10)
+            
+            self._neck.wait()
+            self._leftArm.wait()
+            self._rightArm.wait()
+            
             self._neck.shutdown()
             self._leftArm.shutdown()
             self._rightArm.shutdown()
+            
             self._initialized = False
         return
 
