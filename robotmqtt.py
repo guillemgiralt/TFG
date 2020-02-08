@@ -26,6 +26,7 @@ def convert_position (position):
         float
             The floating point coordinate in the range [0.0, 1.0] or -1.0 if the string is not valid or the position is out of range.
     """
+    position = position.replace(",",".")
     if (position == "up"):
         p = 1.0
     elif (position == "down"):
@@ -66,8 +67,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('right arm move: "{}"'.format(position))
                         robot.body().right_arm_move(position)
-                    else:
-                        logging.error('invalid right arm position: "{}"'.format(position))
                 else:
                     logging.error('invalid right arm action: "{}"'.format(action))
             elif (part == "left_arm"):
@@ -76,8 +75,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('left arm move: "{}"'.format(position))
                         robot.body().left_arm_move(position)
-                    else:
-                        logging.error('invalid left arm position: "{}"'.format(position))
                 else:
                     logging.error('invalid left arm action: "{}"'.format(action))
             elif (part == "neck"):
@@ -86,8 +83,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('left neck move: "{}"'.format(position))
                         robot.body().neck_move(position)
-                    else:
-                        logging.error('invalid neck position: "{}"'.format(position))
                 else:
                     logging.error('invalid neck action: "{}"'.format(action))
             else:
@@ -110,8 +105,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('right eye move: "{}"'.format(position))
                         robot.head().right_eye_move(position)
-                    else:
-                        logging.error('invalid right eye position: "{}"'.format(position))
                 else:
                     logging.error('invalid right arm action: "{}"'.format(action))
                 
@@ -121,8 +114,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('left eye move: "{}"'.format(position))
                         robot.head().left_eye_move(position)
-                    else:
-                        logging.error('invalid left eye position: "{}"'.format(position))
                 else:
                     logging.error('invalid left arm action: "{}"'.format(action))
                 
@@ -132,8 +123,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('neck UD move: "{}"'.format(position))
                         robot.head().neck_UD_move(position)
-                    else:
-                        logging.error('invalid neck UD position: "{}"'.format(position))
                 else:
                     logging.error('invalid neck UD action: "{}"'.format(action))
                     
@@ -143,8 +132,6 @@ def on_message(client, robot, msg):
                     if (position >= 0.0):
                         logging.debug('neck LR move: "{}"'.format(position))
                         robot.head().neck_LR_move(position)
-                    else:
-                        logging.error('invalid neck LR position: "{}"'.format(position))
                 else:
                     logging.error('invalid neck LR action: "{}"'.format(action))
             else:
@@ -152,6 +139,13 @@ def on_message(client, robot, msg):
         else:
             logging.error('invalid head command: "{}"'.format(msg.topic))
 
+
+    elif (msg.topic == "robot/dance"):
+        #----------------------------------
+        # initialze the robot and terminate.
+        #----------------------------------
+        logging.debug('dance')
+        print("dance")
 
     elif (msg.topic == "robot/initialize"):
         #----------------------------------
