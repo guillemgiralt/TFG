@@ -146,7 +146,15 @@ def on_message(client, robot, msg):
         #----------------------------------
         logging.debug('dance')
         print("dance")
-
+        for x in range(0, 6):
+            robot.head().neck_LR_move(0.0)
+            robot.body().right_arm_move(1.0)
+            robot.body().left_arm_move(0.0)
+            time.sleep(0.5)
+            robot.head().neck_LR_move(1.0)
+            robot.body().right_arm_move(0.0)
+            robot.body().left_arm_move(1.0)
+            time.sleep(0.5)
     elif (msg.topic == "robot/initialize"):
         #----------------------------------
         # initialze the robot and terminate.

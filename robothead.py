@@ -16,7 +16,7 @@ class RobotHead:
         self._initialized = False
         self._globalLock  = globalLock
         self._leftEye     = RobotServo(5, 75, 50, globalLock)
-        self._rightEye    = RobotServo(6,110,140, globalLock)
+        self._rightEye    = RobotServo(6,120,150, globalLock)
         self._neckUD      = RobotServo(3,90,130, globalLock)
         self._neckLR      = RobotServo(4,0,180, globalLock)
         return

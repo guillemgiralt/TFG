@@ -8,8 +8,8 @@ import logging
 import time
 import argparse
 
-class PS4Controller(object):
-    """Class representing the Robot PS4 controller."""
+class RobotPS4Controller(object):
+    """Class representing the Robot controller."""
 
     controller      = None
     axis_data       = None
@@ -24,12 +24,28 @@ class PS4Controller(object):
     L2_BUTTON       = 6
     R2_BUTTON       = 7
     SHARE_BUTTON    = 8
-
+    OPTIONS_BUTTON    = 9
+    HAT_UP = (0,1)
+    HAT_DOWN = (0,-1)
+    HAT_RIGHT = (1,0)
+    HAT_LEFT =(-1,0)
+    
     def init(self):
         """Initialize the joystick components"""
         
         pygame.init()
+
+        # initialize the joysitck and wait for one connected.
+        #
         pygame.joystick.init()
+        if (pygame.joystick.get_count() == 0):
+            joyready = False
+            while (not joyready):
+                pygame.joystick.quit()
+                time.sleep (1.0)
+                pygame.joystick.init()
+                joyready = (pygame.joystick.get_count() != 0)
+            
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
 
@@ -68,6 +84,8 @@ class PS4Controller(object):
         neck_Body_UD_p = -1
         neck_UD = False
         neck_UD_p = -1
+        actions = False
+        state   = 0
         
         while not quit:
             for event in pygame.event.get():
@@ -83,7 +101,28 @@ class PS4Controller(object):
                                 neckLR_p = position
                             
                     if event.axis == 1:
-                        if left_arm:
+                        if left_arm==True and right_arm==True:
+                            # moving the left and right arm up-down.
+                            #
+                            position = 1.0 - self.value2pos(event.value)
+                            logging.debug("left_arm: {} {}".format(position, left_arm_p))
+                            if position != left_arm_p:
+                                publish.single ("robot/body/left_arm/move", payload=str(position) , hostname='localhost')
+                            logging.debug("right_arm: {} {}".format(position, right_arm_p))
+                            if position != right_arm_p:
+                                publish.single ("robot/body/right_arm/move", payload=str(position) , hostname='localhost')
+                                
+                        elif left_eye==True and right_eye==True:
+                            # moving the left and right arm up-down.
+                            #
+                            position = 1.0 - self.value2pos(event.value)
+                            logging.debug("left_arm: {} {}".format(position, left_eye_p))
+                            if position != left_eye_p:
+                                publish.single ("robot/head/left_eye/move", payload=str(position) , hostname='localhost')
+                            logging.debug("right_eye: {} {}".format(position, right_eye_p))
+                            if position != right_eye_p:
+                                publish.single ("robot/head/right_eye/move", payload=str(position) , hostname='localhost')
+                        elif left_arm:
                             # moving the left arm up-down.
                             #
                             position = 1.0 - self.value2pos(event.value)
@@ -130,6 +169,7 @@ class PS4Controller(object):
                                 publish.single ("robot/body/neck/move", payload=str(position) , hostname='localhost')
                                 
 
+                                
                 elif event.type == pygame.JOYBUTTONDOWN:
                     logging.debug("down {} button".format(event.button))
                     if event.button == self.L2_BUTTON:
@@ -146,6 +186,8 @@ class PS4Controller(object):
                         neck_Body_UD = True
                     elif event.button == self.SQUARE_BUTTON:
                         neck_UD = True
+                    elif event.button == self.OPTIONS_BUTTON:
+                        actions = True
                         
                 elif event.type == pygame.JOYBUTTONUP:
                     logging.debug("up {} button".format(event.button))
@@ -168,23 +210,35 @@ class PS4Controller(object):
                         right_eye = False
                     elif event.button == self.L1_BUTTON:
                         left_eye = False
+                    elif event.button == self.OPTIONS_BUTTON:
+                        actions = False
                         
                 elif event.type == pygame.JOYHATMOTION:
                     if event.hat == 0:
-                        logging.debug("HAT button {}".format(event.value))
-                        if event.value == (1, 0):
-                            print "right"
-                        if event.value == (-1, 0):
-                            print "left"
-                        if event.value == (0, 1):
-                            print "up"
-                        if event.value == (0, -1):
-                            print "down"
+                        logging.debug("HAT button {} actions={} state={}".format(event.value, actions, state))
+                        if (actions == True) and (event.value != (0,0)):
+                            if state == 0:
+                                if event.value == (0,1):
+                                    state = 1
+                            elif state == 1:
+                                if event.value == (0,-1):
+                                    state = 2
+                                else:
+                                    state = 0
+                            elif state == 2:
+                                if event.value == (0,1):
+                                    state = 3
+                                else:
+                                    state = 0
+                            elif state == 3:
+                                if event.value == (0,-1):
+                                    publish.single ("robot/dance", payload=str(0.0) , hostname='localhost')
+                                state = 0
 
-
+                                    
 if __name__ == "__main__":
     
-    parser = argparse.ArgumentParser(description='Robot PS4 Interface.')
+    parser = argparse.ArgumentParser(description='Robot Joystick Interface.')
     parser.add_argument('-d', '--debug', action="store_true", dest="debug", default=False, help="enable debug mode")
     args = parser.parse_args()
 
@@ -195,6 +249,6 @@ if __name__ == "__main__":
         logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
     
 
-    ps4 = PS4Controller()
-    ps4.init()
-    ps4.listen()
+    robotps4 = RobotPS4Controller()
+    robotps4.init()
+    robotps4.listen()
