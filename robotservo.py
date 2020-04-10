@@ -4,27 +4,20 @@ import logging
 import threading
 from SunFounder_PCA9685 import Servo
 
+## Aquest clase encapsula els moviments de baix nivell del motor
+#  en una interficie mes simple. Permet convertir el moviments
+#  d'angle a un valor de coma floatant en un rang [0.0, 1.0]
+#
 class RobotServo(threading.Thread):
-    """
-    This class implements the robot servo methods.
-    """
-
+    
+    ## Crea la instancia del motor.
+    #
+    # @param[in] servoId el identificador del servo.
+    # @param[in zeroAngle el angle del motor que correspondra a la posicio 0.0
+    # @param[in] oneAngle el angle del motor que correspondra a la posico 1.0
+    # @param[in] globalLock el mecanisme de global sincronització que limita l'accés al recurs compartit de la placa.
+    #
     def __init__ (self, servoId, zeroAngle, oneAngle, globalLock):
-        """
-        Initialize the robot servo instance
-
-        Parameters
-        ----------
-        servoId : int
-            The identifier of the motor servo.
-        zeroAngle : float
-            The motor angle that corresponds to the position 0.0
-        oneAngle : float
-            The motor angle that corresponds to the position 1.0
-        globalLock : 
-            The global thread lock to be used when writing the servo commands.
-
-        """
         threading.Thread.__init__(self)
         self._servoId    = servoId
         self._servo      = Servo.Servo(servoId)
@@ -43,10 +36,9 @@ class RobotServo(threading.Thread):
         self._initial    = 0.0
         return
 
+    ## Inicialitza el motor, arrenca el fil d'execucio i el mou a la seva position inicial.
+    #
     def initialize(self):
-        """
-        Initialize the motor, move the motors to its initial state.
-        """
         self._globalLock.acquire()
         self._servo.setup()
         self._globalLock.release()
@@ -54,19 +46,18 @@ class RobotServo(threading.Thread):
         self.start()
         return
     
+    ## Para el motor i tanca el fil d'execution.
+    #
     def shutdown(self):
-        """
-        Shutdown the motor and clean everything.
-        """
         logging.debug ("shutdown({}).".format(self._servoId))
         self._cvmove.acquire()
         
-        # wait for pending operations.
+        # espera que acabin les operacions pendents.
         #
         while self._operate:
             self._cvmove.wait()
 
-        # set the shutdown flag and wakeup the servo thread.
+        # posem la senyal de parada i despertem el fil d'execucio.
         #
         self._shutdown = True
         self._operate  = True
@@ -77,51 +68,40 @@ class RobotServo(threading.Thread):
 
         return
     
+    ## Obte la posicio actual del motor.
+    #
+    # @return la posicio actual del motor en el rang de [0.0, 1.0]
+    #
     def position(self):
-        """
-        Initialize the motor, move the motors to its initial state.
-
-        Returns
-        -------
-        float
-            The current position.
-        """
         self._cvmove.acquire()
         position = self._position
         self._cvmove.release()
         return position
 
+    ## Mou el motor a una posisio donada amb una velocitat i/o un nombre de passos donats.
+    #
+    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
+    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
+    #
     def move(self, position, speed=0.0, steps=10):
-        """
-        Start moving the motor to a given position with a given speed/steps.
-
-        Parameters
-        ----------
-        position : float
-            The final servo position.
-        speed : float, optional
-            The movement speed in units per second. A value 0.0 (default) indicates to perform a direct move without any step.
-        steps : int, optional
-            The number of steps to perform (default is 10).
-
-        """
         logging.debug ("move({}): position={} speed={} steps={}.".format(self._servoId, position, speed, steps))
         self._cvmove.acquire()
         
-        # wait for pending operations.
+        # esperem que acabin les operacions pendent.
         #
         while self._operate:
             self._cvmove.wait()
 
         if speed == 0.0:
-            # direct move.
+            # moviment directe, podem fer-ho en el mateix fil de qui ens crida.
             #
             self._globalLock.acquire()
             self._servo.write(self._to_angle(position))
             self._globalLock.release()
             self._position = position
         else:
-            # set the target position and wakeup the servo thread.
+            # fixem la posicio final, velocitat i nombre de passos i despertem el fil d'execucio.
             #
             self._target  = position
             self._speed   = speed
@@ -133,14 +113,13 @@ class RobotServo(threading.Thread):
         logging.debug ("move({}): done.".format(self._servoId))
         return
 
+    ## Espera que acabi el moviment pendent.
+    #
     def wait(self):
-        """
-        Wait until a pending move is completed.
-        """
         logging.debug ("wait({}): start.".format(self._servoId))
         self._cvmove.acquire()
         
-        # wait until the thread has completed.
+        # esperem a que acabi el moviment.
         #
         while self._operate:
             self._cvmove.wait()
@@ -149,21 +128,20 @@ class RobotServo(threading.Thread):
         logging.debug ("wait({}): done.".format(self._servoId))
         return
 
+    ## Atura el moviment actual si n'hi ha.
+    #
     def stop(self):
-        """
-        Stop the current movement.
-        """
         logging.debug ("stop{}): start.".format(self._servoId))
         self._cvmove.acquire()
         
-        # stop the current movement.
+        # aturem el moviment.
         #
         self._cvstop.acquire()
         self._stop = True
         self._cvstop.notify()
         self._cvstop.release()
         
-        # wait until the thread has completed.
+        # esperem a que acabi.
         #
         while self._operate:
             self._cvmove.wait()
@@ -172,33 +150,27 @@ class RobotServo(threading.Thread):
         logging.debug ("stop({}): done.".format(self._servoId))
         return
 
+    ## Funcio privada que converteix una posicio entre [0.0, 1.0] al angle del motor a fer servir.
+    #
+    # @param[in] position la posicio entre [0.0, 1.0].
+    # @return el angle del motor que correspon la posicio donada,
+    #
     def _to_angle(self, position):
-        """
-        Converts a position to its motor angle.
-
-        Parameters
-        ----------
-        position : float
-            The servo position to convert.
-
-        Returns
-        -------
-        int
-            The motor angle that corresponds to the given position.
-        """
         angle = (self._oneAngle - self._zeroAngle) * position + self._zeroAngle
         return (int)(angle)
 
+    ## Punt d'entrada del fil execution del motor.
+    #
     def run(self):
-        """
-        Move thread entry point.
-        """
         logging.debug ("run({}): starting.".format(self._servoId))
+
+        # mentre no arribi el shutdown esperarem un moviment.
+        #
         while not self._shutdown:
             
             logging.debug ("run({}): waiting movement.".format(self._servoId))
             
-            # wait until a movement is requested.
+            # esperem a que es demani algun moviment o arribi un shutdown.
             #
             self._cvmove.acquire()
             while not self._operate:
@@ -206,16 +178,16 @@ class RobotServo(threading.Thread):
             self._cvmove.release()
             
             if not self._shutdown:
-                # perform the movement.
+                # hem rebut un moviment.
                 #
                 logging.debug ("run({}): target={}, speed={}, steps={})".format(self._servoId, self._target, self._speed ,self._steps))
                 
-                # compute the increment for each step and the delay to use.
+                # calculem el increment per cada pas i el seu retard.
                 #
                 increment = (self._target - self._position) / self._steps
                 delay     = (abs(self._target - self._position) / self._speed) / self._steps
 
-                # start moving...
+                # comencem a moure i ho repetim tantes vegades com calgui o ens aturin.
                 #
                 self._cvmove.acquire()
                 current = self._position + increment
@@ -229,7 +201,7 @@ class RobotServo(threading.Thread):
                     self._steps = self._steps - 1
                     self._cvmove.wait(delay)
 
-                # movement done, store the position.
+                # moviment acabat, emmagatzamem la posicio final.
                 #
                 if self._stop:
                     logging.debug ("run({}): stopped at current={})".format(self._servoId, current))
@@ -241,7 +213,7 @@ class RobotServo(threading.Thread):
                         
                 logging.debug ("run({}): done.".format(self._servoId))
             
-                # we are not operate anymore and wakeup people waiting
+                # no hem de fer res-mes, despertem a qui estigui adormit esperant el seu torn.
                 #
                 self._cvmove.acquire()
                 self._operate = False

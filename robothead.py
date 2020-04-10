@@ -4,10 +4,15 @@ import threading
 import logging
 from robotservo import RobotServo
 
+## Aquest clase encapsula els moviments del cap del robot.
+#  El cap del robot inclou els seguents elements.
+#
+#  - ull dret : que es moura amunt (posicio 1.0) i avall (posicio 0.0).
+#  - ull esquerra :  que es moura amunt (posicio 1.0) i avall (posicio 0.0).
+#  - neckUD :  que es moura cap amunt (posicio 1.0) i avall (posicio 0.0).
+#  - neckLR :  que es moura cap amunt (posicio 1.0) i avall (posicio 0.0).
+#
 class RobotHead:
-    """
-    This class implements the robot head methods.
-    """
 
     def __init__ (self, globalLock):
         """

@@ -4,25 +4,27 @@ import threading
 import logging
 from robotservo import RobotServo
 
+## Aquest clase encapsula els moviments del cos del robot.
+#  El cos del robot inclou els seguents motors.
+#
+#  - leftArm : controla el braç esquerra que es moura amunt (posicio 1.0) i avall (posicio 0.0).
+#  - rightArm : controla el braç dret es moura amunt (posicio 1.0) i avall (posicio 0.0).
+#  - neck :  que controlla el moviment del cap del robot que es moura cap amunt (posicio 1.0) i a una posicio horitzontal (posicio 0.0).
+#
 class RobotBody:
-    """
-    This class implements the robot body methods.
-    """
 
+    # Instancia tots els motors del cos del robot.
+    #
     def __init__ (self, globalLock):
-        """
-        Initialize and instantiate the servo motors for the body.
-        """
-        self._initialized = False
-        self._neck        = RobotServo(2, 90, 180, globalLock)
-        self._leftArm     = RobotServo(1,100,   0, globalLock)
-        self._rightArm    = RobotServo(0,  0, 100, globalLock)
+        self._initialized = False                               ##!< @var variable que permet no inicialitzar el cos mes d'una vegada.
+        self._neck        = RobotServo(2, 90, 180, globalLock)  ##!< @var _neck el motor que controla el cap.
+        self._leftArm     = RobotServo(1,100,   0, globalLock)  ##!< @var _leftArm el motor que controla el braç esquerra.
+        self._rightArm    = RobotServo(0,  0, 100, globalLock)  ##!< @var _rightMarm el motor el braç dret.
         return
 
+    # Inicialitza el cos del robot i mou els seus elements a la posicio inicial.
+    #
     def initialize(self):
-        """
-        Initialize the body, move the motors to its initial state.
-        """
         if not self._initialized:
             self._neck.initialize ()
             self._leftArm.initialize ()
@@ -39,18 +41,38 @@ class RobotBody:
             self._initialized = True
         return
     
+    # mou el braç esquerra a una posicio donada.
+    #
+    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
+    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
+    #
     def left_arm_move(self, position, speed=0.0, steps=10):
         self._leftArm.move (position, speed, steps)
         return
     
+    # mou el braç dret a una posicio donada.
+    #
+    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
+    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
+    #
     def right_arm_move(self, position, speed=0.0, steps=10):
         self._rightArm.move (position, speed, steps)
         return
 
+    # mou el coll a una posicio donada.
+    #
+    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
+    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
+    #
     def neck_move(self, position, speed=0.0, steps=10):
         self._neck.move (position, speed, steps)
         return
     
+    # poso el cos del robot la seva posicio initial i atura tots els fils d'execucio del seus elements.
+    #
     def shutdown(self):
         if self._initialized:
             
