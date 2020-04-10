@@ -13,7 +13,7 @@ class RobotServo(threading.Thread):
     ## Crea la instancia del motor.
     #
     # @param[in] servoId el identificador del servo.
-    # @param[in zeroAngle el angle del motor que correspondra a la posicio 0.0
+    # @param[in] zeroAngle el angle del motor que correspondra a la posicio 0.0
     # @param[in] oneAngle el angle del motor que correspondra a la posico 1.0
     # @param[in] globalLock el mecanisme de global sincronització que limita l'accés al recurs compartit de la placa.
     #

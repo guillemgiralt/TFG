@@ -14,12 +14,13 @@ from robotservo import RobotServo
 class RobotBody:
 
     # Instancia tots els motors del cos del robot.
+    # @param[in] globalLock el mecanisme de global sincronització que limita l'accés al recurs compartit de la placa.
     #
     def __init__ (self, globalLock):
-        self._initialized = False                               ##!< @var variable que permet no inicialitzar el cos mes d'una vegada.
-        self._neck        = RobotServo(2, 90, 180, globalLock)  ##!< @var _neck el motor que controla el cap.
-        self._leftArm     = RobotServo(1,100,   0, globalLock)  ##!< @var _leftArm el motor que controla el braç esquerra.
-        self._rightArm    = RobotServo(0,  0, 100, globalLock)  ##!< @var _rightMarm el motor el braç dret.
+        self._initialized = False                               
+        self._neck        = RobotServo(2, 90, 180, globalLock) 
+        self._leftArm     = RobotServo(1,100,   0, globalLock)
+        self._rightArm    = RobotServo(0,  0, 100, globalLock)
         return
 
     # Inicialitza el cos del robot i mou els seus elements a la posicio inicial.
