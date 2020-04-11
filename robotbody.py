@@ -13,7 +13,7 @@ from robotservo import RobotServo
 #
 class RobotBody:
 
-    # Instancia tots els motors del cos del robot.
+    ## Instancia tots els motors del cos del robot.
     # @param[in] globalLock el mecanisme de global sincronització que limita l'accés al recurs compartit de la placa.
     #
     def __init__ (self, globalLock):
@@ -23,7 +23,7 @@ class RobotBody:
         self._rightArm    = RobotServo(0,  0, 100, globalLock)
         return
 
-    # Inicialitza el cos del robot i mou els seus elements a la posicio inicial.
+    ## Inicialitza el cos del robot i mou els seus elements a la posicio inicial.
     #
     def initialize(self):
         if not self._initialized:
@@ -42,9 +42,9 @@ class RobotBody:
             self._initialized = True
         return
     
-    # mou el braç esquerra a una posicio donada.
+    ## Mou el braç esquerra amunt i avall.
     #
-    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] position la posicio final del braç en el rang [0.0,1.0]. El valor 0.0 indica moure el braç a la posicio inferior i el valor 1.0 la posicio superior.
     # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
     # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
     #
@@ -52,9 +52,9 @@ class RobotBody:
         self._leftArm.move (position, speed, steps)
         return
     
-    # mou el braç dret a una posicio donada.
+    ## Mou el braç dret amunt i avall.
     #
-    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] position la posicio final del braç en el rang [0.0,1.0]. El valor 0.0 indica moure el braç a la posicio inferior i el valor 1.0 a la posicio superior.
     # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
     # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
     #
@@ -62,9 +62,9 @@ class RobotBody:
         self._rightArm.move (position, speed, steps)
         return
 
-    # mou el coll a una posicio donada.
+    ## Mou el coll amunt i avall.
     #
-    # @param[in] position la posicio final del motor en el rang [0.0,1.0]
+    # @param[in] position la posicio final del coll en el rang [0.0,1.0]. El valor 0.0 indica moure el coll a la posicio inferior i el valor 1.0 a la posicio superior.
     # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
     # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
     #
@@ -72,7 +72,7 @@ class RobotBody:
         self._neck.move (position, speed, steps)
         return
     
-    # poso el cos del robot la seva posicio initial i atura tots els fils d'execucio del seus elements.
+    ## Posa el cos del robot la seva posicio initial i atura tots els fils d'execucio del seus elements.
     #
     def shutdown(self):
         if self._initialized:
