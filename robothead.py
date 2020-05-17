@@ -4,20 +4,15 @@ import threading
 import logging
 from robotservo import RobotServo
 
-## Aquest clase encapsula els moviments del cap del robot.
-#  El cap del robot inclou els seguents elements.
-#
-#  - ull dret : que es moura amunt (posicio 1.0) i avall (posicio 0.0).
-#  - ull esquerra :  que es moura amunt (posicio 1.0) i avall (posicio 0.0).
-#  - neckUD :  que es moura cap amunt (posicio 1.0) i avall (posicio 0.0).
-#  - neckLR :  que es moura cap amunt (posicio 1.0) i avall (posicio 0.0).
-#
 class RobotHead:
+    """
+    This class implements the robot head methods.
+    """
 
-    # Instancia tots els motors del cap del robot.
-    # @param[in] globalLock el mecanisme de global sincronització que limita l'accés al recurs compartit de la placa.
-    #
     def __init__ (self, globalLock):
+        """
+        Initialize and instantiate the servo motors for the head.
+        """
         self._initialized = False
         self._globalLock  = globalLock
         self._leftEye     = RobotServo(5, 75, 50, globalLock)
@@ -26,9 +21,10 @@ class RobotHead:
         self._neckLR      = RobotServo(4,0,180, globalLock)
         return
 
-    ## Inicialitza el cap del robot i mou els seus elements a la posicio inicial.
-    #
     def initialize(self):
+        """
+        Initialize the head, move the motors to its initial state.
+        """
         if not self._initialized:
             
             self._leftEye.initialize()
@@ -49,48 +45,23 @@ class RobotHead:
             self._initialized = True
         return
     
-    ## Mou l'ull esquerra  amunt i avall.
-    #
-    # @param[in] position la posicio final del ull en el rang [0.0,1.0]. El valor 0.0 indica moure l'ull a la posicio inferior i el valor 1.0 la posicio superior.
-    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
-    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
-    #
     def left_eye_move(self, position, speed=0.0, steps=10):
         self._leftEye.move(position, speed, steps)
         return
+    
 
-    ## Mou l'ull dret  amunt i avall.
-    #
-    # @param[in] position la posicio final del ull en el rang [0.0,1.0]. El valor 0.0 indica moure l'ull a la posicio inferior i el valor 1.0 la posicio superior.
-    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
-    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
-    #
     def right_eye_move(self, position, speed=0.0, steps=10):
         self._rightEye.move(position, speed, steps)
         return
     
-    ## Mou el cap amunt i avall.
-    #
-    # @param[in] position la posicio final del cap en el rang [0.0,1.0]. El valor 0.0 indica moure el cap a la posicio inferior i el valor 1.0 la posicio superior.
-    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
-    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
-    #
     def neck_UD_move(self, position, speed=0.0, steps=10):
         self._neckUD.move(position, speed, steps)
         return
 
-    ## Mou el cap esquerra i dreta.
-    #
-    # @param[in] position la posicio final del cap en el rang [0.0,1.0]. El valor 0.0 indica moure el cap cap a l'esquerra i el valor 1.0 cap a la dreta.
-    # @param[in] speed la velocitar del moviment en unitats per segon. El valor de defecte 0.0 indica que cal fer el moviment a velocitat maxima.
-    # @param[in] steps el nombre de passos per tal de fer el moviments (per defecte 10).
-    #
     def neck_LR_move(self,  position, speed=0.0, steps=10):
         self._neckLR.move(position, speed, steps)
         return
     
-    ## Posa el cap del robot la seva posicio initial i atura tots els fils d'execucio del seus elements.
-    #
     def shutdown(self):
         if self._initialized:
             
